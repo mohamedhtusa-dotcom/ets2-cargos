@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETS2 Cargos List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 30px 0;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .search-box input {
+            padding: 12px 20px;
+            width: 100%;
+            max-width: 400px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box input::placeholder {
+            color: #999;
+        }
+
+        .cargo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .cargo-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .cargo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .cargo-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .cargo-card .weight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .cargo-card .description {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .cargo-card .category {
+            display: inline-block;
+            background: #f0f0f0;
+            color: #667eea;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .highlight-20t {
+            border: 3px solid #ffc107;
+            background: #fffbea;
+        }
+
+        .highlight-20t h3 {
+            color: #ffc107;
+        }
+
+        .badge-20t {
+            display: inline-block;
+            background: #ffc107;
+            color: #333;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 700;
+            margin-top: 10px;
+            margin-left: 5px;
+        }
+
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats p {
+            color: #667eea;
+            font-size: 1.1em;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .no-results {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            padding: 40px 20px;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚛 ETS2 Cargos Database</h1>
+            <p>Complete list of all available cargo types in Euro Truck Simulator 2</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search cargo by name...">
+        </div>
+
+        <div class="stats">
+            <p>Total Cargos: <strong id="totalCount">0</strong></p>
+            <p>20 Ton Cargos: <strong id="count20t">0</strong></p>
+        </div>
+
+        <div class="cargo-grid" id="cargoGrid"></div>
+
+        <div id="noResults" class="no-results" style="display: none;">
+            No cargos found matching your search.
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 ETS2 Cargo Database | Euro Truck Simulator 2</p>
+    </footer>
+
+    <script>
+        const cargos = [
+            { name: 'Automotive', weight: 20, description: 'Car parts and automotive components', category: 'Industrial' },
+            { name: 'Beverages', weight: 18, description: 'Soft drinks, beer, and other beverages', category: 'Food & Drink' },
+            { name: 'Brick', weight: 20, description: 'Construction bricks and blocks', category: 'Building Materials' },
+            { name: 'Car', weight: 20, description: 'Complete vehicles and automobiles', category: 'Automotive' },
+            { name: 'Coal', weight: 20, description: 'Coal for power plants and industrial use', category: 'Energy' },
+            { name: 'Copper', weight: 18, description: 'Copper ore and metal sheets', category: 'Materials' },
+            { name: 'Corn', weight: 20, description: 'Corn grain and agricultural products', category: 'Agricultural' },
+            { name: 'Cotton', weight: 15, description: 'Raw cotton and textile materials', category: 'Textiles' },
+            { name: 'Express', weight: 8, description: 'Time-sensitive express shipments', category: 'General' },
+            { name: 'Fish', weight: 12, description: 'Fresh and frozen fish products', category: 'Food & Drink' },
+            { name: 'Flatbed Trailer', weight: 20, description: 'Equipment and machinery for special transport', category: 'Specialized' },
+            { name: 'Flowers', weight: 6, description: 'Cut flowers and floral arrangements', category: 'Agriculture' },
+            { name: 'Food', weight: 15, description: 'General food products and groceries', category: 'Food & Drink' },
+            { name: 'Fuel', weight: 20, description: 'Gasoline, diesel, and other fuels', category: 'Energy' },
+            { name: 'Glass', weight: 18, description: 'Glass sheets and glassware', category: 'Building Materials' },
+            { name: 'Grain', weight: 20, description: 'Various grain types and cereals', category: 'Agricultural' },
+            { name: 'Grit', weight: 20, description: 'Industrial grit and abrasives', category: 'Industrial' },
+            { name: 'Logs', weight: 20, description: 'Timber logs and wood products', category: 'Forestry' },
+            { name: 'Meat', weight: 12, description: 'Fresh and frozen meat products', category: 'Food & Drink' },
+            { name: 'Metal', weight: 20, description: 'Steel sheets and metal products', category: 'Materials' },
+            { name: 'Milk', weight: 12, description: 'Fresh milk and dairy products', category: 'Food & Drink' },
+            { name: 'Paper', weight: 20, description: 'Paper rolls and paper products', category: 'Industrial' },
+            { name: 'Perishables', weight: 14, description: 'Temperature-sensitive perishable goods', category: 'Food & Drink' },
+            { name: 'Petrol', weight: 20, description: 'Refined petroleum products', category: 'Energy' },
+            { name: 'Pipes', weight: 20, description: 'Metal and plastic pipes', category: 'Materials' },
+            { name: 'Planks', weight: 20, description: 'Cut timber and wooden planks', category: 'Forestry' },
+            { name: 'Plastic', weight: 20, description: 'Plastic raw materials and products', category: 'Materials' },
+            { name: 'Produce', weight: 16, description: 'Fresh fruits and vegetables', category: 'Agricultural' },
+            { name: 'Refrigerated', weight: 12, description: 'Temperature-controlled cargo', category: 'Specialized' },
+            { name: 'Sand', weight: 20, description: 'Construction sand and abrasives', category: 'Building Materials' },
+            { name: 'Silage', weight: 20, description: 'Silage for livestock feed', category: 'Agricultural' },
+            { name: 'Soda', weight: 20, description: 'Soda ash and chemical products', category: 'Chemical' },
+            { name: 'Steel', weight: 20, description: 'Steel beams and structural steel', category: 'Materials' },
+            { name: 'Sugar', weight: 20, description: 'Sugar and sweetening products', category: 'Food & Drink' },
+            { name: 'Sulphur', weight: 20, description: 'Sulfur and chemical compounds', category: 'Chemical' },
+            { name: 'Textiles', weight: 16, description: 'Fabric and textile materials', category: 'Textiles' },
+            { name: 'Tyres', weight: 20, description: 'Vehicle tires and rubber products', category: 'Automotive' },
+            { name: 'Vegetables', weight: 16, description: 'Fresh vegetables and produce', category: 'Agricultural' },
+            { name: 'Waste', weight: 20, description: 'Recyclable and waste materials', category: 'Environmental' },
+            { name: 'Water', weight: 20, description: 'Drinking water and bottled water', category: 'Beverages' }
+        ];
+
+        // Sort cargos alphabetically
+        cargos.sort((a, b) => a.name.localeCompare(b.name));
+
+        const cargoGrid = document.getElementById('cargoGrid');
+        const searchInput = document.getElementById('searchInput');
+        const noResults = document.getElementById('noResults');
+        const totalCount = document.getElementById('totalCount');
+        const count20t = document.getElementById('count20t');
+
+        function renderCargos(filteredCargos = cargos) {
+            cargoGrid.innerHTML = '';
+            
+            if (filteredCargos.length === 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+
+            filteredCargos.forEach(cargo => {
+                const is20t = cargo.weight === 20;
+                const cargoCard = document.createElement('div');
+                cargoCard.className = `cargo-card ${is20t ? 'highlight-20t' : ''}`;
+                
+                cargoCard.innerHTML = `
+                    <h3>${cargo.name}${is20t ? '<span class="badge-20t">20T</span>' : ''}</h3>
+                    <div class="weight">${cargo.weight}t</div>
+                    <p class="description">${cargo.description}</p>
+                    <span class="category">${cargo.category}</span>
+                `;
+                
+                cargoGrid.appendChild(cargoCard);
+            });
+
+            // Update stats
+            totalCount.textContent = filteredCargos.length;
+            count20t.textContent = filteredCargos.filter(c => c.weight === 20).length;
+        }
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = cargos.filter(cargo => 
+                cargo.name.toLowerCase().includes(searchTerm) ||
+                cargo.category.toLowerCase().includes(searchTerm) ||
+                cargo.description.toLowerCase().includes(searchTerm)
+            );
+            renderCargos(filtered);
+        });
+
+        // Initial render
+        renderCargos();
+    </script>
+</body>
+</html>
